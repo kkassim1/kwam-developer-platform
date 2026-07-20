@@ -1,0 +1,53 @@
+package main
+
+import (
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"sync/atomic"
+	"time"
+)
+
+var requests atomic.Uint64
+
+func main() {
+	if len(os.Args) > 1 && os.Args[1] == "-healthcheck" {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "8080"
+		}
+		client := http.Client{Timeout: 2 * time.Second}
+		response, err := client.Get("http://127.0.0.1:" + port + "/healthz")
+		if err != nil || response.StatusCode != http.StatusOK {
+			os.Exit(1)
+		}
+		_ = response.Body.Close()
+		return
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		_, _ = fmt.Fprintln(w, "{{SERVICE_NAME}} is running")
+	})
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = fmt.Fprintln(w, "ok")
+	})
+	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = fmt.Fprintln(w, "ready")
+	})
+	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
+		_, _ = fmt.Fprintf(w, "http_requests_total %d\n", requests.Load())
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	slog.Info("service starting", "service", "{{SERVICE_NAME}}", "port", port)
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
+		slog.Error("service stopped", "error", err)
+		os.Exit(1)
+	}
+}

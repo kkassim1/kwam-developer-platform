@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: {{SERVICE_NAME}}
+  annotations:
+    platform.kwam.dev/golden-path: go-service-v1
+spec:
+  type: service
+  lifecycle: experimental
+  owner: {{OWNER}}

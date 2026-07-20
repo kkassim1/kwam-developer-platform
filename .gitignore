@@ -1,0 +1,8 @@
+bin/
+sandbox/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.env
+.DS_Store

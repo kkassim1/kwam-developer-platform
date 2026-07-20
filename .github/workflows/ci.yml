@@ -1,0 +1,61 @@
+name: platform-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: false
+      - name: Format check
+        run: test -z "$(gofmt -l cmd internal examples)"
+      - name: Test and vet
+        run: make test check
+      - name: Build CLI
+        run: make build
+      - name: Exercise golden path
+        run: ./bin/platformctl new service --name ci-generated-api --owner platform-team --output "$RUNNER_TEMP"
+      - name: Test generated service
+        working-directory: ${{ runner.temp }}/ci-generated-api
+        run: go test ./...
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build non-root image
+        run: docker build -t hello-api:${{ github.sha }} ./examples/hello-api
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          image-ref: hello-api:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+
+  infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.10.6"
+      - name: Format
+        run: tofu fmt -check -recursive terraform
+      - name: Initialize without backend
+        working-directory: terraform/aws
+        run: tofu init -backend=false
+      - name: Validate
+        working-directory: terraform/aws
+        run: tofu validate

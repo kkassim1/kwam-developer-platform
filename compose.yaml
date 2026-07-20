@@ -1,0 +1,22 @@
+services:
+  demo-api:
+    build: ./examples/hello-api
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "/service", "-healthcheck"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.6.0
+    profiles: ["observe"]
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - demo-api
