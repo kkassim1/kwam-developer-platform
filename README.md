@@ -16,7 +16,7 @@ A zero-cost, local-first internal developer platform demo. It gives developers a
 
 ## Quick start
 
-Requirements: Go 1.23+ and Docker with Compose.
+Requirements: Go 1.25+ and Docker with Compose.
 
 ```bash
 make test
