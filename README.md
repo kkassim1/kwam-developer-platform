@@ -11,7 +11,7 @@ A zero-cost, local-first internal developer platform demo. It gives developers a
 - Golden paths: health checks, metrics, tests, container security, and service metadata by default
 - Repeatability: the same checks run locally and in GitHub Actions
 - Observability: Prometheus-ready metrics and a local monitoring stack
-- Infrastructure as code: an optional, scale-to-zero AWS Lambda path with OpenTofu
+- Infrastructure as code: an optional, cost-guarded AWS foundation with OpenTofu
 - Cost safety: local execution is the default; no workflow automatically creates cloud resources
 
 ## Quick start
@@ -66,7 +66,7 @@ GitHub Actions quality and security gates
 Optional OpenTofu plan / manual AWS deployment
 ```
 
-See [the architecture](docs/architecture.md), [cost controls](docs/cost-safety.md), and [roadmap](docs/roadmap.md).
+See [the architecture](docs/architecture.md), [cost controls](docs/cost-safety.md), [interview guide](docs/interview-guide.md), and [roadmap](docs/roadmap.md).
 
 ## Cost model
 
@@ -85,10 +85,10 @@ If you choose to use AWS later, use an AWS Free account plan, configure budgets 
 | --- | --- |
 | `cmd/platformctl` | Self-service developer CLI |
 | `internal/generator` | Golden-path service generator |
-| `templates/go-service` | Opinionated service template |
+| `internal/generator/template` | Embedded, opinionated service template |
 | `examples/hello-api` | Generated example workload |
 | `observability` | Local Prometheus configuration |
-| `terraform/aws` | Optional scale-to-zero AWS foundation |
+| `terraform/aws` | Optional cost-guarded AWS foundation |
 | `.github/workflows` | CI, security, and infrastructure validation |
 
 ## Design principles
