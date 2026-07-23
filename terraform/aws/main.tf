@@ -1,4 +1,7 @@
 locals {
+  foundation_count = var.enable_aws_resources ? 1 : 0
+  service_count    = var.enable_aws_resources && var.enable_service_deployment ? 1 : 0
+
   common_tags = {
     Project   = "kwam-developer-platform"
     ManagedBy = "opentofu"
@@ -8,7 +11,7 @@ locals {
 }
 
 resource "aws_budgets_budget" "learning" {
-  count = var.enable_aws_resources ? 1 : 0
+  count = local.foundation_count
 
   name         = "kwam-platform-monthly"
   budget_type  = "COST"
@@ -33,10 +36,11 @@ resource "aws_budgets_budget" "learning" {
 }
 
 resource "aws_ecr_repository" "services" {
-  count = var.enable_aws_resources ? 1 : 0
+  count = local.foundation_count
 
   name                 = "kwam-platform-services"
   image_tag_mutability = "IMMUTABLE"
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true
@@ -48,7 +52,7 @@ resource "aws_ecr_repository" "services" {
 }
 
 resource "aws_ecr_lifecycle_policy" "services" {
-  count      = var.enable_aws_resources ? 1 : 0
+  count      = local.foundation_count
   repository = aws_ecr_repository.services[0].name
 
   policy = jsonencode({
@@ -67,17 +71,17 @@ resource "aws_ecr_lifecycle_policy" "services" {
 }
 
 resource "aws_cloudwatch_log_group" "platform" {
-  count             = var.enable_aws_resources ? 1 : 0
+  count             = local.foundation_count
   name              = "/portfolio/kwam-developer-platform"
   retention_in_days = 7
 }
 
 resource "aws_ecs_cluster" "platform" {
-  count = var.enable_aws_resources ? 1 : 0
+  count = local.foundation_count
   name  = "kwam-developer-platform"
 
   setting {
     name  = "containerInsights"
-    value = "enabled"
+    value = var.enable_container_insights ? "enabled" : "disabled"
   }
 }
